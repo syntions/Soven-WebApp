@@ -8,6 +8,7 @@ def from_png_to_jpg(map):
         return map
     color = map[:, :, 0:3].astype(np.float) / 255.0
     alpha = map[:, :, 3:4].astype(np.float) / 255.0
+    reversed_color = 1 - color
     final_color = (255.0 - reversed_color * alpha * 255.0).clip(0,255).astype(np.uint8)
     return final_color
 
@@ -156,6 +157,7 @@ def opreate_gird_hint(gird, points, type, length):
             gird[b_:t_, l_:r_, 2] = 1 - r / 255.0
             gird[b_:t_, l_:r_, 1] = 1 - g / 255.0
             gird[b_:t_, l_:r_, 0] = 1 - b / 255.0
+            gird[b_:t_, l_:r_, 3] = 1
     return gird
 
 
@@ -174,6 +176,7 @@ def opreate_normal_hint(gird, points, type, length):
             gird[b_:t_, l_:r_, 2] = r
             gird[b_:t_, l_:r_, 1] = g
             gird[b_:t_, l_:r_, 0] = b
+            gird[b_:t_, l_:r_, 3] = 255.0
     return gird
 
 
@@ -182,7 +185,7 @@ def go_cvline(img):
     y = cv2.Sobel(img, cv2.CV_16S, 0, 1)
     absX = cv2.convertScaleAbs(x)
     absY = cv2.convertScaleAbs(y)
-    r = 255 - cv2.addWeighted(absX, 0.1, absY, 0.1, 0)
+    r = 255 - cv2.addWeighted(absX, 0.5, absY, 0.5, 0)
     return np.tile(np.min(r, axis=2, keepdims=True).clip(0, 255).astype(np.uint8), [1, 1, 3])
 
 
@@ -229,8 +232,16 @@ def hard_norm(x):
     return (255.0 - y * 255.0).astype(np.uint8)
 
 
+def sensitive(x, s=15.0):
+    y = x.astype(np.float32)
+    y -= s
+    y /= 255.0 - s * 2.0
+    y *= 255.0
+    return y.clip(0, 255).astype(np.uint8)
+
+
 def min_black(x):
-    return np.tile(np.min(x, axis=2), [1, 1, 3])
+    return np.tile(np.min(x, axis=2, keepdims=True), [1, 1, 3])
 
 
 def eye_black(x):
@@ -268,5 +279,5 @@ def clip_15(x, s=15.0):
 
 
 def cv_denoise(x):
-    return cv2.fastNlMeansDenoisingColored(x, None)
+    return cv2.fastNlMeansDenoisingColored(x, None, 3, 3, 7, 21)
 
