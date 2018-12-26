@@ -55,7 +55,7 @@ with tf.device(device_A):
     baby_op = YUV2RGB(baby(tf.concat([ip1, baby_hint], axis=3)))
 
     girder = load_model('girder.net')
-    gird_op = (1 - girder(ip1 / 255.0)) * 255.0
+    gird_op = (1 - girder([1 - ip1 / 255.0, ip4, 1 - ip3 / 255.0])) * 255.0
 
     reader = load_model('reader.net')
     features = reader(ip3 / 255.0)
@@ -87,4 +87,42 @@ with tf.device(device_B):
 
 
 session.run(tf.global_variables_initializer())
+
+
+tail.load_weights('tail.net')
+baby.load_weights('baby.net')
+head.load_weights('head.net')
+neck.load_weights('neck.net')
+girder.load_weights('girder.net')
+reader.load_weights('reader.net')
+
+
+def go_head(sketch, global_hint, local_hint, global_hint_x, alpha):
+    return session.run(head_op, feed_dict={
+        ip1: sketch[None, :, :, None], ip3: global_hint[None, :, :, :], ip4: local_hint[None, :, :, :], ip3x: global_hint_x[None, :, :, :], ipa: np.array([alpha])[None, :]
+    })[0].clip(0, 255).astype(np.uint8)
+
+
+def go_neck(sketch, global_hint, local_hint, global_hint_x, alpha):
+    return session.run(neck_op, feed_dict={
+        ip1: sketch[None, :, :, None], ip3: global_hint[None, :, :, :], ip4: local_hint[None, :, :, :], ip3x: global_hint_x[None, :, :, :], ipa: np.array([alpha])[None, :]
+    })[0].clip(0, 255).astype(np.uint8)
+
+
+def go_gird(sketch, latent, hint):
+    return session.run(gird_op, feed_dict={
+        ip1: sketch[None, :, :, None], ip3: latent[None, :, :, :], ip4: hint[None, :, :, :]
+    })[0].clip(0, 255).astype(np.uint8)
+
+
+def go_tail(x):
+    return session.run(tail_op, feed_dict={
+        ip3B: x[None, :, :, :]
+    })[0].clip(0, 255).astype(np.uint8)
+
+
+def go_baby(sketch, local_hint):
+    return session.run(baby_op, feed_dict={
+        ip1: sketch[None, :, :, None], ip4: local_hint[None, :, :, :]
+    })[0].clip(0, 255).astype(np.uint8)
 
