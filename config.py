@@ -1,4 +1,4 @@
 device_A = '/gpu:0'
-multiple_process =  False
+device_B = '/gpu:0'
+multiple_process =  True
 debugging = False
-CUDA = True
