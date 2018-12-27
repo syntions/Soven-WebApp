@@ -17,6 +17,9 @@ from ai import *
 from tricks import *
 
 
+BaseRequest.MEMFILE_MAX = 10000 * 1000
+
+
 def get_request_image(name):
     img = request.forms.get(name)
     img = re.sub('^data:image/.+;base64,', '', img)
@@ -65,10 +68,10 @@ def handle_sketch_upload_pool():
                 print('lucky to find lined sketch')
             else:
                 improved_sketch = go_passline(color_sketch)
-                improved_sketch = min_k_down_c(improved_sketch)
+                improved_sketch = min_k_down_c(improved_sketch, 2)
                 improved_sketch = cv_denoise(improved_sketch)
                 improved_sketch = go_tail(improved_sketch)
-                improved_sketch = sensitive(improved_sketch)
+                improved_sketch = sensitive(improved_sketch, s=5.0)
                 cv2.imwrite(room_path + '/sketch.recolorization.jpg', min_black(improved_sketch))
                 if need_de_painting:
                     cv2.imwrite(room_path + '/sketch.de_painting.jpg', min_black(improved_sketch))
@@ -228,6 +231,19 @@ def save_as_sample():
         if os.path.exists(previous_path + '/' + previous_file_name):
             shutil.copy(previous_path + '/' + previous_file_name, new_path + '/' + new_file_name)
 
+    transfer('sketch.original.jpg')
+    transfer('sketch.improved.jpg')
+    transfer('sketch.colorization.jpg')
+    transfer('sketch.rendering.jpg')
+    transfer('sketch.recolorization.jpg')
+    transfer('sketch.de_painting.jpg')
+
+    transfer('result.' + step + '.jpg', 'result.sample.jpg')
+    transfer('reference.' + step + '.jpg', 'reference.sample.jpg')
+    transfer('icon.' + step + '.jpg', 'icon.sample.jpg')
+    transfer('composition.' + step + '.jpg', 'composition.sample.jpg')
+    transfer('options.' + step + '.json', 'options.sample.json')
+
     print('saved')
 
     return 'ok'
@@ -247,4 +263,8 @@ os.makedirs('game/rooms', exist_ok=True)
 os.makedirs('results', exist_ok=True)
 threading.Thread(target=server_loop).start()
 
-run(host="0.0.0.0", port=80, server='paste')
+if multiple_process:
+    run(host="0.0.0.0", port=80, server='paste')
+else:
+    run(host="0.0.0.0", port=8000, server='paste')
+
