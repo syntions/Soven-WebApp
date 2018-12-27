@@ -484,10 +484,10 @@ require = function i(r, d, l) {
 				window.controller.logo_node.active = !1
 			},
 			onGithub: function () {
-				window.open("https://github.com/Soven-IA")
+				window.open("https://github.com/onsoho/soven")
 			},
 			onCD: function () {
-				window.open("https://soven-ia.com")
+				window.open("https://reyesfernando.com")
 			},
 			onAlter: function () {
 				window.cnzh ? this.onCD() : this.onGithub()

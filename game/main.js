@@ -115,6 +115,8 @@
             }
 
             cc.AssetLibrary.init({
+                libraryPath: 'res/import',
+                rawAssetsBase: 'res/raw-',
                 rawAssets: settings.rawAssets,
                 packedAssets: settings.packedAssets,
                 md5AssetsMap: settings.md5AssetsMap
@@ -156,6 +158,7 @@
             id: 'GameCanvas',
             scenes: settings.scenes,
             debugMode: settings.debug ? cc.DebugMode.INFO : cc.DebugMode.ERROR,
+            showFPS: (!false && !false) && settings.debug,
             frameRate: 60,
             jsList: jsList,
             groupList: settings.groupList,
